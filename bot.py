@@ -25,6 +25,7 @@ EXTENSION_MODULES = [
     "stats",
     "permissions",
     "embed_data",
+    "embed_commands"
 ]
 
 
