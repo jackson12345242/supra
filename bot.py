@@ -49,6 +49,7 @@ async def on_ready():
     try:
         if GUILD_ID:
             guild = discord.Object(id=int(GUILD_ID))
+            bot.tree.copy_global_to(guild=guild)
             synced = await bot.tree.sync(guild=guild)
         else:
             synced = await bot.tree.sync()
@@ -58,7 +59,6 @@ async def on_ready():
 
 
 # --- Reverse reaction role handling ---
-# NOTE: verify this doesn't already exist elsewhere (e.g. storage.py)
 @bot.event
 async def on_raw_reaction_add(payload: discord.RawReactionActionEvent):
     from storage import read_json  # local import avoids circulars at startup
