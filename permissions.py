@@ -1,7 +1,8 @@
-import os
-from dotenv import load_dotenv
+import discord
+from config import EMBED_BUILDER_ROLE_ID
 
-load_dotenv()
 
-EMBED_BUILDER_ROLE_ID = int(os.getenv("EMBED_BUILDER_ROLE_ID", 0))
-VOUCH_CHANNEL_ID = int(os.getenv("VOUCH_CHANNEL_ID", 0))
+def has_embed_role(member) -> bool:
+    if not isinstance(member, discord.Member):
+        return False
+    return any(role.id == EMBED_BUILDER_ROLE_ID for role in member.roles)
