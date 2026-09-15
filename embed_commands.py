@@ -27,13 +27,10 @@ def _refresh_embed(interaction: discord.Interaction, name: str) -> discord.Embed
     return build_embed_from_data(data)
 
 
-# ---------- Modals ----------
-
 class BasicInfoModal(ui.Modal, title="Edit Basic Information"):
     def __init__(self, name: str):
         super().__init__()
         self.name = name
-        data = None
 
     embed_title = ui.TextInput(label="Title", required=False, max_length=256)
     description = ui.TextInput(label="Description", required=False, style=discord.TextStyle.paragraph, max_length=2000)
@@ -112,8 +109,6 @@ class ImagesModal(ui.Modal, title="Edit Images"):
         await interaction.response.edit_message(embed=embed)
 
 
-# ---------- Builder view (buttons) ----------
-
 class EmbedBuilderView(ui.View):
     def __init__(self, name: str):
         super().__init__(timeout=None)
@@ -141,8 +136,6 @@ class EmbedBuilderView(ui.View):
     async def images(self, interaction: discord.Interaction, button: ui.Button):
         await interaction.response.send_modal(ImagesModal(self.name))
 
-    @ui.button(label="Code", style=discord.ButtonStyle.link, emoji="🔗") if False else None
-
     @ui.button(label="Code", style=discord.ButtonStyle.success)
     async def code(self, interaction: discord.Interaction, button: ui.Button):
         data = get_embed_data(interaction.guild_id, self.name) or {}
@@ -151,8 +144,6 @@ class EmbedBuilderView(ui.View):
             code_str = code_str[:1900] + "\n... (truncated)"
         await interaction.response.send_message(f"```json\n{code_str}\n```", ephemeral=True)
 
-
-# ---------- Slash commands ----------
 
 embed_group = app_commands.Group(name="embed", description="Create and manage custom embeds")
 
