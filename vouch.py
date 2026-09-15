@@ -4,6 +4,7 @@ import time
 import discord
 from config import VOUCH_CHANNEL_ID
 from storage import read_json, write_json
+from formatting import fmt_amount
 
 VOUCH_RE = re.compile(r"^vouch\s+<@!?(\d+)>\s+\$?([\d,]+(?:\.\d+)?)\s*(.*)$", re.IGNORECASE)
 
@@ -28,14 +29,35 @@ def record_vouch(guild_id: int, vouched_user_id: int, from_user_id: int, amount:
     return record
 
 
+def build_vouch_embed(guild: discord.Guild, vouched_user: discord.abc.User, from_user: discord.abc.User, amount: float, record: dict) -> discord.Embed:
+    embed = discord.Embed(
+        title="Supraa's Stocks",
+        colour=0x0000FF,
+    )
+    if guild.icon:
+        embed.set_thumbnail(url=guild.icon.url)
+
+    embed.add_field(
+        name="Vouch Format",
+        value="`vouch @user $amount`",
+        inline=False,
+    )
+    embed.add_field(
+        name="Total Transacted",
+        value=fmt_amount(record["total"]),
+        inline=False,
+    )
+    embed.set_footer(text=f"Vouched by {from_user.name} for {vouched_user.name}")
+
+    return embed
+
+
 def setup(bot: discord.Client):
     @bot.event
     async def on_message(message: discord.Message):
-        # Ignore the bot's own messages
         if message.author.bot:
             return
 
-        # Only watch the configured vouch channel
         if VOUCH_CHANNEL_ID and message.channel.id != VOUCH_CHANNEL_ID:
             return
 
@@ -49,8 +71,11 @@ def setup(bot: discord.Client):
         if target_id == message.author.id:
             return await message.reply("You can't vouch for yourself.", mention_author=False)
 
-        record_vouch(message.guild.id, target_id, message.author.id, amount)
-        await message.add_reaction("✅")
+        target_user = message.guild.get_member(target_id) or await bot.fetch_user(target_id)
 
-        # Let other bot.py-level on_message logic (like commands) still run if you add any later
+        record = record_vouch(message.guild.id, target_id, message.author.id, amount)
+
+        embed = build_vouch_embed(message.guild, target_user, message.author, amount, record)
+        await message.reply(embed=embed, mention_author=False)
+
         await bot.process_commands(message)
